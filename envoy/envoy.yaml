@@ -22,9 +22,27 @@ static_resources:
               routes:
               - match: { prefix: "/test-service" }
                 route: { cluster: some_service }
+              - match: { prefix: "/users" }
+                route: { cluster: users_service }
+              - match: { prefix: "/" }
+                route: { cluster: app_service }
           http_filters:
           - name: envoy.filters.http.router
   clusters:
+  - name: app_service
+    connect_timeout: 40s
+    type: LOGICAL_DNS 
+    dns_lookup_family: V4_ONLY
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: app_service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: app 
+                port_value: 3000
   - name: some_service
     connect_timeout: 0.25s
     type: LOGICAL_DNS 
@@ -38,4 +56,18 @@ static_resources:
             address:
               socket_address:
                 address: testservice
-                port_value: 3000 
+                port_value: 3010 
+  - name: users_service
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS 
+    dns_lookup_family: V4_ONLY
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: some_service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: users 
+                port_value: 3020

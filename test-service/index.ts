@@ -1,7 +1,10 @@
 import express, { Application, NextFunction, Request, Response } from "express";
+import { Link } from "./models/hateoas/link.model";
+import { TestCollection } from "./models/test-collection.model";
+import { Test } from "./models/test.model";
 
 const app: Application = express();
-const port = 3000;
+const port = 3010;
 
 const myLogger = function (req: Request, res: Response, next: NextFunction) {
   console.log(req.originalUrl)
@@ -22,11 +25,23 @@ router.get("/", async (req: Request, res: Response): Promise<Response> => {
 
 router.get("/test", async (req: Request, res: Response): Promise<Response> => {
   return res.status(200).send({
-    message: "Hello World!",
-  })
+    self: {
+      href: 'http://localhost:3000/test-service/api/v1/test',
+      rel: [ 'collection' ]
+    } as Link,
+    value: [
+      {
+        self: {
+          href: 'http://localhost:3000/test-service/api/v1/test',
+          rel: [ 'item' ]
+        } as Link,
+        name: "test"
+      } as Test
+    ]
+  } as TestCollection)
 })
 
-app.use('/test-service/api/:version/', router)
+app.use('/test-service/api/v:version/', router)
 
 try {
   app.listen(port, (): void => {
